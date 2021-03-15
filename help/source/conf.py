@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# UAVPreparer documentation build configuration file, created by
+# UAVPreparerProcessing documentation build configuration file, created by
 # sphinx-quickstart on Sun Feb 12 17:11:03 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,7 +40,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'UAVPreparer'
+project = u'UAVPreparerProcessing'
 copyright = u'2013, Fredrik Lindberg'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -178,7 +178,7 @@ htmlhelp_basename = 'TemplateClassdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'UAVPreparer.tex', u'UAVPreparer Documentation',
+  ('index', 'UAVPreparerProcessing.tex', u'UAVPreparerProcessing Documentation',
    u'Fredrik Lindberg', 'manual'),
 ]
 
@@ -211,6 +211,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'TemplateClass', u'UAVPreparer Documentation',
+    ('index', 'TemplateClass', u'UAVPreparerProcessing Documentation',
      [u'Fredrik Lindberg'], 1)
 ]

@@ -3,7 +3,7 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=UAV Preparer
+name=UAV Preparer for Processing
 qgisMinimumVersion=3.0
 description=This plugin examines height properties on a DSM
 version=0.1
@@ -18,7 +18,7 @@ repository=https://github.com/biglimp/UAVPreparer
 
 # Recommended items:
 
-hasProcessingProvider=no
+hasProcessingProvider=yes
 # Uncomment the following line and add your changelog:
 # changelog=
 
@@ -26,7 +26,7 @@ hasProcessingProvider=no
 tags=python
 
 homepage=https://github.com/biglimp/UAVPreparer
-category=Plugins
+category=Analysis
 icon=icon.png
 # experimental flag
 experimental=True
