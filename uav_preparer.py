@@ -27,7 +27,7 @@ from qgis.PyQt.QtWidgets import QFileDialog, QAction, QMessageBox
 from qgis.gui import QgsMapLayerComboBox, QgsFieldComboBox, QgsMessageBar
 from qgis.core import QgsVectorLayer, QgsMapLayerProxyModel, QgsFieldProxyModel, Qgis
 import numpy as np
-import subprocess
+#import subprocess
 from osgeo import gdal
 
 # Initialize Qt resources from file resources.py
@@ -245,7 +245,7 @@ class UAVPreparer:
             QMessageBox.critical(None, "Error", "Specify an output file")
             return
 
-                # Acquiring geodata and attributes
+        # Acquiring geodata and attributes
         dsm_layer = self.layerComboManagerDSM.currentLayer()
         if dsm_layer is None:
             QMessageBox.critical(None, "Error", "No valid raster layer is selected")
@@ -270,10 +270,14 @@ class UAVPreparer:
         ### main code ###
 
         #  set radius
-        rSquare = 100  # half picture size
+        r = 100  # half picture size
 
         numfeat = vlayer.featureCount()
         result = np.zeros([numfeat, 4])
+
+        # load big raster
+        bigraster = gdal.Open(filepath_dsm)
+        filepath_tempdsm = self.plugin_dir + '/clipdsm.tif'
 
         self.dlg.progressBar.setRange(0, numfeat)
         i = 0
@@ -283,21 +287,15 @@ class UAVPreparer:
             y = f.geometry().centroid().asPoint().y()
             x = f.geometry().centroid().asPoint().x()
 
-            # gdalclipdsm = 'gdalwarp -dstnodata -9999 -q -overwrite -te ' + str(x - rSquare) + ' ' + str(
-            #     y - rSquare) + ' ' + str(x + rSquare) + ' ' + str(y + rSquare) + ' -of GTiff ' + \
-            #               filepath_dsm + ' ' + self.plugin_dir + '/clipdsm.tif'
-            # #QMessageBox.critical(None, "Bla", gdalclipdsm)
-            # # call the gdal function
-            # si = subprocess.STARTUPINFO()  # used to suppress cmd window
-            # si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            # subprocess.call(gdalclipdsm, startupinfo=si)
+            bbox = (x - r, y + r, x + r, y - r)
+            gdal.Translate(filepath_tempdsm, bigraster, projWin=bbox)
+            data = gdal.Open(filepath_tempdsm)
+            mat = np.array(data.ReadAsArray())
 
-            dataset = gdal.Open(self.plugin_dir + '/clipdsm.tif')
-            dsm_array = dataset.ReadAsArray().astype(np.float)
             result[i, 0] = int(f.attributes()[idx])
-            result[i, 1] = np.mean(dsm_array)
-            result[i, 2] = np.max(dsm_array)
-            result[i, 3] = np.min(dsm_array)
+            result[i, 1] = np.mean(mat)
+            result[i, 2] = np.max(mat)
+            result[i, 3] = np.min(mat)
 
             i = i + 1
 
