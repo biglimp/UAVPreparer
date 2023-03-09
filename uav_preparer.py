@@ -27,7 +27,6 @@ from qgis.PyQt.QtWidgets import QFileDialog, QAction, QMessageBox
 from qgis.gui import QgsMapLayerComboBox, QgsFieldComboBox, QgsMessageBar
 from qgis.core import QgsVectorLayer, QgsMapLayerProxyModel, QgsFieldProxyModel, Qgis
 import numpy as np
-#import subprocess
 from osgeo import gdal
 
 # Initialize Qt resources from file resources.py
@@ -264,11 +263,10 @@ class UAVPreparer:
         point_field = self.layerComboManagerPointField.currentField()
         idx = vlayer.fields().indexFromName(point_field)
         if idx == -1:
-            QMessageBox.critical(None, "Error", "An attribute with unique fields must be selected")
+            QMessageBox.critical(None, "Error", "An attribute with numbers has to be selected")
             return
 
         ### main code ###
-
         #  set radius
         r = 100  # half picture size
 
