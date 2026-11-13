@@ -32,7 +32,6 @@ __revision__ = '$Format:%H$'
 
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.core import (QgsProcessing,
-                       QgsFeatureSink,
                        QgsProcessingAlgorithm,
                        QgsProcessingParameterFeatureSource,
                        QgsProcessingParameterField,
@@ -73,6 +72,8 @@ class UAVPreparerProcessingAlgorithm(QgsProcessingAlgorithm):
         with some other properties.
         """
 
+        self.plugin_dir = os.path.dirname(__file__)
+
         self.addParameter(
             QgsProcessingParameterRasterLayer(
                 self.INPUT_DSM,
@@ -92,8 +93,8 @@ class UAVPreparerProcessingAlgorithm(QgsProcessingAlgorithm):
             QgsProcessingParameterField(
                 self.ID_FIELD,
                 self.tr('ID field'),
-                '', 
-                self.INPUT_POINT, 
+                '',
+                self.INPUT_POINT,
                 QgsProcessingParameterField.Numeric
             )
         )
@@ -114,26 +115,24 @@ class UAVPreparerProcessingAlgorithm(QgsProcessingAlgorithm):
                 self.tr('Output file with tabular metric information'),
                 self.tr('TXT files (*.txt *.txt)')))
 
-        self.plugin_dir = os.path.dirname(__file__)
-
-
     def processAlgorithm(self, parameters, context, feedback):
         """
         Here is where the processing itself takes place.
         """
         # InputParameters
         vlayer = self.parameterAsVectorLayer(parameters, self.INPUT_POINT, context)
-        idField = self.parameterAsFields(parameters, self.ID_FIELD, context)
+        idField = self.parameterAsString(parameters, self.ID_FIELD, context)
         dsm_layer = self.parameterAsRasterLayer(parameters, self.INPUT_DSM, context)
         r = self.parameterAsDouble(parameters, self.RADIUS, context)
         outputFile = self.parameterAsFileOutput(parameters, self.OUTPUT_FILE, context)
 
         provider = dsm_layer.dataProvider()
         filepath_dsm = str(provider.dataSourceUri())
-        idx = vlayer.fields().indexFromName(idField[0])
+        idx = vlayer.fields().indexFromName(idField)
         numfeat = vlayer.featureCount()
         result = np.zeros([numfeat, 4])
-
+        filepath_tempdsm = self.plugin_dir + '/clipdsm.tif'
+        bigraster = gdal.Open(filepath_dsm)
         i = 0
         for f in vlayer.getFeatures():
             # Stop the algorithm if cancel button has been clicked
@@ -141,39 +140,25 @@ class UAVPreparerProcessingAlgorithm(QgsProcessingAlgorithm):
                 break
             feedback.setProgress(int((i * 100) / numfeat))
             # get the coordinate for the point
-            y = f.geometry().centroid().asPoint().y()
-            x = f.geometry().centroid().asPoint().x()
-
-            # gdalclipdsm = 'gdalwarp -dstnodata -9999 -q -overwrite -te ' + str(x - rSquare) + ' ' + str(
-            #     y - rSquare) + ' ' + str(x + rSquare) + ' ' + str(y + rSquare) + ' -of GTiff ' + \
-            #               filepath_dsm + ' ' + self.plugin_dir + '/clipdsm.tif'
-            # # call the gdal function
-            # si = subprocess.STARTUPINFO()  # used to suppress cmd window
-            # si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-            # subprocess.call(gdalclipdsm, startupinfo=si)
-
-            # Remove gdalwarp with gdal.Translate
-            bbox = (x - r, y + r, x + r, y - r) # OBS! opposite order
-            bigraster = gdal.Open(filepath_dsm)
-            gdal.Translate(self.plugin_dir + '/clipdsm.tif', bigraster, projWin=bbox)
-            bigraster = None
-
-            dataset = gdal.Open(self.plugin_dir + '/clipdsm.tif')
-            dsm_array = dataset.ReadAsArray().astype(np.float)
+            y = f.geometry().asPoint().y()
+            x = f.geometry().asPoint().x()
+            bbox = (x - r, y + r, x + r, y - r)
+            gdal.Translate(filepath_tempdsm, bigraster, projWin=bbox)
+            dataset = gdal.Open(filepath_tempdsm)
+            dsm_array = dataset.ReadAsArray().astype(float)
             result[i, 0] = int(f.attributes()[idx])
             result[i, 1] = np.mean(dsm_array)
             result[i, 2] = np.max(dsm_array)
             result[i, 3] = np.min(dsm_array)
-
             i = i + 1
 
+        bigraster = None
         # Saving to file
-        numformat = '%d ' + '%6.2f ' * 3
+        numformat = '%d %6.2f %6.2f %6.2f'
         headertext = 'id mean max min'
+        print(result)
         np.savetxt(outputFile, result, fmt=numformat, delimiter=' ', header=headertext)
-
         feedback.setProgressText('UAV Preparer. Operation successful!')
-
         return {self.OUTPUT_FILE: outputFile}
 
     def name(self):

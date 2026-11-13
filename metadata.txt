@@ -5,6 +5,7 @@
 [general]
 name=UAV Preparer for Processing
 qgisMinimumVersion=3.0
+qgisMaximumVersion=4.99
 description=This plugin examines height properties on a DSM
 version=0.1
 author=Fredrik Lindberg

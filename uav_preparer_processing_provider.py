@@ -72,7 +72,7 @@ class UAVPreparerProcessingProvider(QgsProcessingProvider):
 
         This string should be short (e.g. "Lastools") and localised.
         """
-        return 'UAV Prepearer'
+        return 'UAV Preparer'
 
     def icon(self):
         """
